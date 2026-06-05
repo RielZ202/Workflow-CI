@@ -1,13 +1,3 @@
-"""
-modelling.py (MLProject)
-========================
-Script training model untuk MLflow Project & GitHub Actions CI.
-Mendukung argumen CLI agar bisa dikonfigurasi melalui MLProject entry point.
-
-Usage:
-    python modelling.py [--n_estimators 200] [--max_depth 12] ...
-"""
-
 import os
 import sys
 import json
@@ -104,6 +94,7 @@ f1_w     = f1_score(y_test, y_pred, average='weighted')
 f1_mac   = f1_score(y_test, y_pred, average='macro')
 roc_auc  = roc_auc_score(y_bin, y_pred_prob, multi_class='ovr', average='weighted')
 
+with mlflow.start_run():
 # Log Params
 mlflow.log_param("n_estimators",      args.n_estimators)
 mlflow.log_param("max_depth",         args.max_depth)
