@@ -43,12 +43,23 @@ args = parser.parse_args()
 # ─────────────────────────────────────────────────────────
 # KONFIGURASI MLFLOW
 # ─────────────────────────────────────────────────────────
-TRACKING_URI = os.getenv('MLFLOW_TRACKING_URI', 'http://127.0.0.1:5000/')
+TRACKING_URI = os.getenv('MLFLOW_TRACKING_URI', '').strip()
+
+if not TRACKING_URI:
+    print("ERROR: MLFLOW_TRACKING_URI environment variable is not set!")
+    print("Please set MLFLOW_TRACKING_URI before running this script.")
+    sys.exit(1)
+
+# Validate URI format
+if not TRACKING_URI.startswith('http'):
+    print(f"ERROR: Invalid MLFLOW_TRACKING_URI format: {TRACKING_URI}")
+    print("URI must start with 'http://' or 'https://'")
+    sys.exit(1)
+
 mlflow.set_tracking_uri(TRACKING_URI)
 mlflow.set_experiment("AI-Student-BurnoutRisk-CI")
 
 print(f"MLflow Tracking URI: {TRACKING_URI}")
-
 
 # ─────────────────────────────────────────────────────────
 # LOAD DATA
@@ -69,7 +80,6 @@ X_test  = df_test.drop(columns=[TARGET])
 y_test  = df_test[TARGET]
 
 print(f"Train: {X_train.shape} | Test: {X_test.shape}")
-
 
 # ─────────────────────────────────────────────────────────
 # TRAINING DAN LOGGING
