@@ -68,8 +68,19 @@ jobs:
             MLProject/metric_info.json
             MLProject/latest_run_id.txt
           retention-days: 30
-
-      # ─── 9. Build Docker Image (Python 3.10) ────────────────
+          
+# ─── 9. Clean MLflow and Docker cache ────────────────────
+      - name: Clean cache before Docker build
+        working-directory: MLProject
+        run: |
+          # Remove old model artifacts
+          rm -rf MLruns
+          rm -rf .mlflow
+          
+          # Clear Docker build cache (optional)
+          docker system prune -f
+          
+ # ─── 10. Build Docker Image (Python 3.10) ────────────────
       - name: Build Docker Model
         working-directory: MLProject
         env:
