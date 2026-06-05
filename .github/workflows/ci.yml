@@ -14,11 +14,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # ─── 2. Set up Python 3.12.7 ────────────────────────────
-      - name: Set up Python 3.12.7
+      # ─── 2. Set up Python 3.12 ──────────────────────────────
+      - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12.7'
+          python-version: '3.12'
 
       # ─── 3. Check Env ────────────────────────────────────────
       - name: Check Env
@@ -32,9 +32,9 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install mlflow==2.19.0 pandas numpy scikit-learn matplotlib seaborn dagshub
+          pip install mlflow==2.19.0 pandas==2.2.3 numpy==1.26.4 scikit-learn==1.5.2 matplotlib==3.9.2 seaborn==0.13.2 dagshub==0.3.37
 
-      # ─── 5. Set MLflow Tracking URI ──────────────────────────
+      # ─── 5. Set MLflow Tracking URI ───────────���──────────────
       - name: Set MLflow Tracking URI
         run: |
           echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> $GITHUB_ENV
