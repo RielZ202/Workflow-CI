@@ -31,7 +31,7 @@ jobs:
       # ─── 4. Install Dependencies untuk TRAINING ──────────────
       - name: Install dependencies for training
         run: |
-          pip install --upgrade pip
+          pip install --upgrade pip setuptools wheel
           pip install mlflow==2.19.0 pandas==2.2.3 numpy==1.26.4 scikit-learn==1.5.2 matplotlib==3.9.2 seaborn==0.13.2 dagshub==0.3.37
 
       # ─── 5. Set MLflow Tracking URI ──────────────────────────
@@ -58,12 +58,7 @@ jobs:
           echo "Latest MLflow Run ID: $RUN_ID"
           echo "MLFLOW_RUN_ID=$RUN_ID" >> $GITHUB_ENV
 
-      # ─── 8. Install Python dependencies for artifact ─────────
-      - name: Install Python dependencies
-        run: |
-          pip install mlflow==2.19.0
-
-      # ─── 9. Upload Artifacts to GitHub ───────────────────────
+      # ─── 8. Upload Artifacts to GitHub ───────────────────────
       - name: Upload to GitHub
         uses: actions/upload-artifact@v4
         with:
@@ -74,8 +69,8 @@ jobs:
             MLProject/latest_run_id.txt
           retention-days: 30
 
-      # ─── 10. Build Docker Image (Python 3.9) ────────────────
-      - name: Build Docker Model with Python 3.9
+      # ─── 9. Build Docker Image (Python 3.10) ────────────────
+      - name: Build Docker Model
         working-directory: MLProject
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
@@ -88,14 +83,14 @@ jobs:
             --name "ai-student-burnout-risk" \
             --enable-mlserver
 
-      # ─── 11. Log in to Docker Hub ────────────────────────────
+      # ─── 10. Log in to Docker Hub ────────────────────────────
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ─── 12. Tag Docker Image ────────────────────────────────
+      # ─── 11. Tag Docker Image ────────────────────────────────
       - name: Tag Docker Image
         run: |
           docker tag ai-student-burnout-risk:latest \
@@ -103,7 +98,7 @@ jobs:
           docker tag ai-student-burnout-risk:latest \
             ${{ secrets.DOCKERHUB_USERNAME }}/ai-student-burnout-risk:${{ github.run_number }}
 
-      # ─── 13. Push Docker Image ───────────────────────────────
+      # ─── 12. Push Docker Image ───────────────────────────────
       - name: Push Docker Image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ai-student-burnout-risk:latest
