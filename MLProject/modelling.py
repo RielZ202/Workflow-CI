@@ -84,8 +84,7 @@ print(f"Train: {X_train.shape} | Test: {X_test.shape}")
 # ─────────────────────────────────────────────────────────
 # TRAINING DAN LOGGING
 # ─────────────────────────────────────────────────────────
-with mlflow.start_run(run_name="CI_RandomForest"):
-
+with mlflow.start_run(run_name="CI_RandomForest", nested=True):
     # Model
     model = RandomForestClassifier(
         n_estimators=args.n_estimators,

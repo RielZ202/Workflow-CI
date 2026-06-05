@@ -48,14 +48,8 @@ jobs:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
-        run: |
-          mlflow run . \
-            --env-manager=local \
-            -P n_estimators=200 \
-            -P max_depth=12 \
-            -P min_samples_split=2 \
-            -P max_features=sqrt \
-            -P random_state=42
+        run: mlflow run . --env-manager=local -P n_estimators=200 -P max_depth=12 -P min_samples_split=2 -P max_features=sqrt -P random_state=42
+
 
       # ─── 7. Get Latest MLflow Run ID ─────────────────────────
       - name: Get latest MLflow run_id
