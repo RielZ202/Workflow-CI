@@ -1,0 +1,19 @@
+name: ai-student-burnout-risk
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    parameters:
+      n_estimators: {type: int, default: 200}
+      max_depth: {type: int, default: 12}
+      min_samples_split: {type: int, default: 2}
+      max_features: {type: str, default: "sqrt"}
+      random_state: {type: int, default: 42}
+    command: >
+      python modelling.py
+        --n_estimators {n_estimators}
+        --max_depth {max_depth}
+        --min_samples_split {min_samples_split}
+        --max_features {max_features}
+        --random_state {random_state}

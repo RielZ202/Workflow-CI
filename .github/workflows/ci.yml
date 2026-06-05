@@ -1,0 +1,118 @@
+name: CI - MLflow Training & Docker Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  train-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─── 1. Setup Job ───────────────────────────────────────
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # ─── 2. Set up Python 3.12.7 ────────────────────────────
+      - name: Set up Python 3.12.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.7'
+
+      # ─── 3. Check Env ────────────────────────────────────────
+      - name: Check Env
+        run: |
+          python --version
+          pip --version
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Working dir: $(pwd)"
+
+      # ─── 4. Install Dependencies ─────────────────────────────
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install mlflow==2.19.0 pandas numpy scikit-learn matplotlib seaborn dagshub
+
+      # ─── 5. Set MLflow Tracking URI ──────────────────────────
+      - name: Set MLflow Tracking URI
+        run: |
+          echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> $GITHUB_ENV
+          echo "MLFLOW_TRACKING_USERNAME=${{ secrets.MLFLOW_TRACKING_USERNAME }}" >> $GITHUB_ENV
+          echo "MLFLOW_TRACKING_PASSWORD=${{ secrets.MLFLOW_TRACKING_PASSWORD }}" >> $GITHUB_ENV
+
+      # ─── 6. Run MLflow Project ───────────────────────────────
+      - name: Run mlflow project
+        working-directory: MLProject
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+        run: |
+          mlflow run . \
+            --env-manager=local \
+            -P n_estimators=200 \
+            -P max_depth=12 \
+            -P min_samples_split=2 \
+            -P max_features=sqrt \
+            -P random_state=42
+
+      # ─── 7. Get Latest MLflow Run ID ─────────────────────────
+      - name: Get latest MLflow run_id
+        working-directory: MLProject
+        run: |
+          RUN_ID=$(cat latest_run_id.txt)
+          echo "Latest MLflow Run ID: $RUN_ID"
+          echo "MLFLOW_RUN_ID=$RUN_ID" >> $GITHUB_ENV
+
+      # ─── 8. Install Python dependencies for artifact ─────────
+      - name: Install Python dependencies
+        run: |
+          pip install mlflow==2.19.0
+
+      # ─── 9. Upload Artifacts to GitHub ───────────────────────
+      - name: Upload to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlflow-artifacts-${{ github.run_number }}
+          path: |
+            MLProject/training_confusion_matrix.png
+            MLProject/metric_info.json
+            MLProject/latest_run_id.txt
+          retention-days: 30
+
+      # ─── 10. Build Docker Image ──────────────────────────────
+      - name: Build Docker Model
+        working-directory: MLProject
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+        run: |
+          RUN_ID=$(cat latest_run_id.txt)
+          mlflow models build-docker \
+            --model-uri "runs:/$RUN_ID/model" \
+            --name "ai-student-burnout-risk" \
+            --enable-mlserver
+
+      # ─── 11. Log in to Docker Hub ────────────────────────────
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # ─── 12. Tag Docker Image ────────────────────────────────
+      - name: Tag Docker Image
+        run: |
+          docker tag ai-student-burnout-risk:latest \
+            ${{ secrets.DOCKERHUB_USERNAME }}/ai-student-burnout-risk:latest
+          docker tag ai-student-burnout-risk:latest \
+            ${{ secrets.DOCKERHUB_USERNAME }}/ai-student-burnout-risk:${{ github.run_number }}
+
+      # ─── 13. Push Docker Image ───────────────────────────────
+      - name: Push Docker Image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ai-student-burnout-risk:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ai-student-burnout-risk:${{ github.run_number }}
+          echo "Docker image pushed: ${{ secrets.DOCKERHUB_USERNAME }}/ai-student-burnout-risk:latest"
