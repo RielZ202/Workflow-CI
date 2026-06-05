@@ -47,7 +47,9 @@ if not TRACKING_URI.startswith('http'):
     sys.exit(1)
 
 mlflow.set_tracking_uri(TRACKING_URI)
-mlflow.set_experiment("AI-Student-BurnoutRisk-CI")
+
+# ⚠️ JANGAN SET EXPERIMENT DI SINI - biarkan mlflow run mengelolanya
+# mlflow.set_experiment("AI-Student-BurnoutRisk-CI")
 
 print(f"MLflow Tracking URI: {TRACKING_URI}")
 
@@ -96,7 +98,7 @@ f1_w     = f1_score(y_test, y_pred, average='weighted')
 f1_mac   = f1_score(y_test, y_pred, average='macro')
 roc_auc  = roc_auc_score(y_bin, y_pred_prob, multi_class='ovr', average='weighted')
 
-# ──── LOG PARAMS & METRICS (tanpa mlflow.start_run()) ────
+# ──── LOG PARAMS & METRICS ────
 # Log Params
 mlflow.log_param("n_estimators",      args.n_estimators)
 mlflow.log_param("max_depth",         args.max_depth)
