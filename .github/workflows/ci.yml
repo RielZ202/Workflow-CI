@@ -14,8 +14,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # ─── 2. Set up Python 3.12 ──────────────────────────────
-      - name: Set up Python 3.12
+      # ─── 2. Set up Python 3.12 untuk TRAINING ───────────────
+      - name: Set up Python 3.12 for Training
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
@@ -28,13 +28,13 @@ jobs:
           echo "Runner OS: ${{ runner.os }}"
           echo "Working dir: $(pwd)"
 
-      # ─── 4. Install Dependencies ─────────────────────────────
-      - name: Install dependencies
+      # ─── 4. Install Dependencies untuk TRAINING ──────────────
+      - name: Install dependencies for training
         run: |
           pip install --upgrade pip
           pip install mlflow==2.19.0 pandas==2.2.3 numpy==1.26.4 scikit-learn==1.5.2 matplotlib==3.9.2 seaborn==0.13.2 dagshub==0.3.37
 
-      # ─── 5. Set MLflow Tracking URI ───────────���──────────────
+      # ─── 5. Set MLflow Tracking URI ──────────────────────────
       - name: Set MLflow Tracking URI
         run: |
           echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> $GITHUB_ENV
@@ -49,7 +49,6 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
         run: mlflow run . --env-manager=local -P n_estimators=200 -P max_depth=12 -P min_samples_split=2 -P max_features=sqrt -P random_state=42
-
 
       # ─── 7. Get Latest MLflow Run ID ─────────────────────────
       - name: Get latest MLflow run_id
@@ -75,8 +74,8 @@ jobs:
             MLProject/latest_run_id.txt
           retention-days: 30
 
-      # ─── 10. Build Docker Image ──────────────────────────────
-      - name: Build Docker Model
+      # ─── 10. Build Docker Image (Python 3.9) ────────────────
+      - name: Build Docker Model with Python 3.9
         working-directory: MLProject
         env:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
